@@ -1,0 +1,16 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+.mypy_cache/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+benchmark/results/*.json
+paper/figures/*.png
+paper/figures/*.html
+paper/figures/*.csv
+.DS_Store
