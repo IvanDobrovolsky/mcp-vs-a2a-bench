@@ -1,4 +1,4 @@
-"""Execute all queries x 3 architectures x 5 runs = 450 total runs."""
+"""Execute all queries x 3 architectures x N runs with checkpoint-per-execution."""
 
 from __future__ import annotations
 
@@ -57,13 +57,46 @@ async def run_single(
         )
 
 
+def _load_existing_results(output_file=None) -> list[dict]:
+    """Load existing results from disk for resume support."""
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    filepath = RESULTS_DIR / (output_file or "benchmark_results.json")
+    if filepath.exists():
+        with open(filepath) as f:
+            return json.load(f)
+    return []
+
+
+def _save_results_raw(results: list[dict], output_file=None):
+    """Save raw dict results to JSON file (checkpoint)."""
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    filepath = RESULTS_DIR / (output_file or "benchmark_results.json")
+    with open(filepath, "w") as f:
+        json.dump(results, f, indent=2, default=str)
+
+
+def _is_already_done(existing: list[dict], query_id: int, arch: str, run_num: int) -> bool:
+    """Check if a specific execution already exists in results."""
+    for r in existing:
+        if (r.get("query_id") == query_id
+                and r.get("architecture") == arch
+                and r.get("run_number") == run_num):
+            return True
+    return False
+
+
 async def run_benchmark(
     architectures: list[Architecture] | None = None,
     query_ids: list[int] | None = None,
     runs: int = RUNS_PER_QUERY,
     output_file: str | None = None,
+    resume: bool = True,
 ) -> list[BenchmarkResult]:
-    """Run the full benchmark suite."""
+    """Run the full benchmark suite with per-execution checkpointing.
+
+    If resume=True (default), skips executions that already exist in the
+    output file. This means you can safely interrupt and restart.
+    """
     if architectures is None:
         architectures = [Architecture.MCP, Architecture.A2A, Architecture.HYBRID]
 
@@ -75,17 +108,25 @@ async def run_benchmark(
     else:
         queries = all_queries
 
-    total = len(queries) * len(architectures) * runs
-    print(f"Running {total} total executions:")
-    print(f"  {len(queries)} queries x {len(architectures)} architectures x {runs} runs\n")
+    # Load existing results for resume
+    existing_results = _load_existing_results(output_file) if resume else []
+    if existing_results:
+        print(f"Loaded {len(existing_results)} existing results (resume mode)")
 
-    results: list[BenchmarkResult] = []
+    total = len(queries) * len(architectures) * runs
+    skipped = 0
     completed = 0
 
     for query in queries:
         for arch in architectures:
             for run_num in range(1, runs + 1):
                 completed += 1
+
+                # Skip if already done
+                if _is_already_done(existing_results, query["id"], arch.value, run_num):
+                    skipped += 1
+                    continue
+
                 label = f"[{completed}/{total}] Q{query['id']} ({query['complexity']}) | {arch.value} | run {run_num}"
                 print(f"{label}...", end=" ", flush=True)
 
@@ -96,21 +137,16 @@ async def run_benchmark(
                 status = "OK" if result.success else f"FAIL: {result.error_message[:50]}"
                 print(f"{status} ({elapsed:.1f}s)")
 
-                results.append(result)
+                # Append and checkpoint immediately
+                existing_results.append(result.model_dump())
+                _save_results_raw(existing_results, output_file)
 
-                # Save incrementally
-                _save_results(results, output_file)
+    if skipped:
+        print(f"\nSkipped {skipped} already-completed executions")
+    print(f"Benchmark complete. {len(existing_results)} total results saved.")
 
-    print(f"\nBenchmark complete. {len(results)} results saved.")
-    return results
-
-
-def _save_results(results: list[BenchmarkResult], output_file=None):
-    """Save results to JSON file."""
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    filepath = RESULTS_DIR / (output_file or "benchmark_results.json")
-    with open(filepath, "w") as f:
-        json.dump([r.model_dump() for r in results], f, indent=2, default=str)
+    # Convert back to BenchmarkResult for return
+    return [BenchmarkResult(**r) for r in existing_results]
 
 
 async def main():
@@ -126,6 +162,8 @@ async def main():
                         help=f"Runs per query (default: {RUNS_PER_QUERY})")
     parser.add_argument("--output", type=str, default=None,
                         help="Output filename (default: benchmark_results.json)")
+    parser.add_argument("--no-resume", action="store_true",
+                        help="Start fresh instead of resuming from existing results")
     parser.add_argument("--fault-injection", action="store_true",
                         help="Also run fault injection tests after benchmark")
     parser.add_argument("--hallucination-check", action="store_true",
@@ -149,6 +187,7 @@ async def main():
         query_ids=args.queries,
         runs=args.runs,
         output_file=args.output,
+        resume=not args.no_resume,
     )
 
     # Fault injection
