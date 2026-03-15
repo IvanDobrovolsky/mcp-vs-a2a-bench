@@ -1,26 +1,26 @@
 {
   "mcp": {
-    "specific_loc": 314,
+    "specific_loc": 257,
     "shared_loc": 449,
-    "total_loc": 763,
+    "total_loc": 706,
     "total_files": 11,
     "specific_files": 5,
-    "total_functions": 17,
+    "total_functions": 16,
     "total_classes": 0,
-    "avg_cyclomatic_complexity": 7.818181818181818,
+    "avg_cyclomatic_complexity": 7.909090909090909,
     "files": [
       {
         "path": "mcp_only/agent.py",
-        "code_lines": 155,
-        "total_lines": 229,
-        "functions": 3,
+        "code_lines": 140,
+        "total_lines": 219,
+        "functions": 2,
         "classes": 0,
-        "cyclomatic_complexity": 20
+        "cyclomatic_complexity": 21
       },
       {
         "path": "mcp_only/github_mcp_server.py",
-        "code_lines": 86,
-        "total_lines": 134,
+        "code_lines": 44,
+        "total_lines": 92,
         "functions": 6,
         "classes": 0,
         "cyclomatic_complexity": 4
@@ -120,7 +120,7 @@
       {
         "path": "a2a_multi/github_agent.py",
         "code_lines": 105,
-        "total_lines": 135,
+        "total_lines": 134,
         "functions": 3,
         "classes": 1,
         "cyclomatic_complexity": 11
@@ -232,14 +232,14 @@
     ]
   },
   "hybrid": {
-    "specific_loc": 1500,
+    "specific_loc": 1450,
     "shared_loc": 449,
-    "total_loc": 1949,
+    "total_loc": 1899,
     "total_files": 22,
     "specific_files": 16,
-    "total_functions": 60,
+    "total_functions": 59,
     "total_classes": 17,
-    "avg_cyclomatic_complexity": 9.318181818181818,
+    "avg_cyclomatic_complexity": 9.363636363636363,
     "files": [
       {
         "path": "hybrid/coordinator.py",
@@ -251,24 +251,24 @@
       },
       {
         "path": "hybrid/router.py",
-        "code_lines": 64,
-        "total_lines": 96,
+        "code_lines": 71,
+        "total_lines": 105,
         "functions": 3,
         "classes": 0,
         "cyclomatic_complexity": 10
       },
       {
         "path": "mcp_only/agent.py",
-        "code_lines": 155,
-        "total_lines": 229,
-        "functions": 3,
+        "code_lines": 140,
+        "total_lines": 219,
+        "functions": 2,
         "classes": 0,
-        "cyclomatic_complexity": 20
+        "cyclomatic_complexity": 21
       },
       {
         "path": "mcp_only/github_mcp_server.py",
-        "code_lines": 86,
-        "total_lines": 134,
+        "code_lines": 44,
+        "total_lines": 92,
         "functions": 6,
         "classes": 0,
         "cyclomatic_complexity": 4
@@ -308,7 +308,7 @@
       {
         "path": "a2a_multi/github_agent.py",
         "code_lines": 105,
-        "total_lines": 135,
+        "total_lines": 134,
         "functions": 3,
         "classes": 1,
         "cyclomatic_complexity": 11

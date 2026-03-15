@@ -9,8 +9,9 @@ dist/
 build/
 .venv/
 venv/
-benchmark/results/*.json
-paper/figures/*.png
-paper/figures/*.html
-paper/figures/*.csv
+# Keep generated results and figures in the repo for reproducibility
+# benchmark/results/*.json
+# paper/figures/*.png
+# paper/figures/*.html
+# paper/figures/*.csv
 .DS_Store

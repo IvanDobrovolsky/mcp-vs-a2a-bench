@@ -1,0 +1,83 @@
+% Auto-generated LaTeX tables for mcp-vs-a2a-bench paper
+
+% Run: python -m benchmark.latex_tables
+
+
+
+% Table 1: Main Results
+
+\begin{table}[ht]
+\centering
+\caption{Benchmark Results: Mean (95\% CI) across 5 runs per query}
+\label{tab:main-results}
+\begin{tabular}{llrrrrc}
+\toprule
+\textbf{Complexity} & \textbf{Arch} & \textbf{Latency (ms)} & \textbf{Tokens} & \textbf{LLM Calls} & \textbf{API Calls} & \textbf{Cost (\$)} \\
+\midrule
+Simple & MCP & 8,654 [6,217, 11,841] & 4,576 & 2.0 & 1.5 & 0.0165 \\
+ & A2A & 19,599 [17,857, 21,823] & 1,959 & 3.2 & 1.2 & 0.0159 \\
+ & HYBRID & 10,124 [6,427, 14,694] & 4,038 & 2.3 & 1.1 & 0.0164 \\
+\midrule
+Medium & MCP & 28,685 [25,338, 31,903] & 9,041 & 2.8 & 9.2 & 0.0401 \\
+ & A2A & 37,430 [34,487, 40,447] & 6,435 & 5.5 & 5.5 & 0.0529 \\
+ & HYBRID & 34,222 [30,567, 37,306] & 5,870 & 4.6 & 5.8 & 0.0445 \\
+\midrule
+Complex & MCP & 55,584 [46,363, 64,523] & 27,320 & 6.0 & 25.4 & 0.1084 \\
+ & A2A & 44,275 [39,309, 49,247] & 11,258 & 5.7 & 14.7 & 0.0792 \\
+ & HYBRID & 46,815 [40,168, 54,568] & 16,563 & 5.5 & 14.9 & 0.0949 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+% Table 2: Statistical Significance
+
+\begin{table}[ht]
+\centering
+\caption{Pairwise Latency Comparisons (Mann-Whitney U, Bonferroni-corrected)}
+\label{tab:significance}
+\begin{tabular}{llccc}
+\toprule
+\textbf{Complexity} & \textbf{Comparison} & \textbf{$p$ (corrected)} & \textbf{Cliff's $\delta$} & \textbf{Effect} \\
+\midrule
+Simple & MCP vs A2A & 0.0154* & -0.840 & large \\
+Simple & MCP vs HYBRID & 1.0000 & -0.140 & negligible \\
+Simple & A2A vs HYBRID & 0.0820 & +0.700 & large \\
+Medium & MCP vs A2A & 0.0413* & -0.760 & large \\
+Medium & MCP vs HYBRID & 0.2317 & -0.600 & large \\
+Medium & A2A vs HYBRID & 1.0000 & +0.300 & small \\
+Complex & MCP vs A2A & 1.0000 & +0.420 & medium \\
+Complex & MCP vs HYBRID & 1.0000 & +0.340 & medium \\
+Complex & A2A vs HYBRID & 1.0000 & -0.060 & negligible \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+% Table 3: Code Complexity
+
+\begin{table}[ht]
+\centering
+\caption{Implementation Complexity by Architecture}
+\label{tab:complexity}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Metric} & \textbf{MCP} & \textbf{A2A} & \textbf{Hybrid} \\
+\midrule
+Architecture-specific LOC & 257 & 1081 & 1450 \\
+Shared LOC & 449 & 449 & 449 \\
+Total LOC & 706 & 1530 & 1899 \\
+Files & 11 & 15 & 22 \\
+Functions & 16 & 38 & 59 \\
+Avg. Cyclomatic Complexity & 7.9 & 10.7 & 9.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+% Table 4: Fault Injection
+
+% No fault injection results available
