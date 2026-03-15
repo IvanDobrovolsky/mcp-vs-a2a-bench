@@ -1,0 +1,214 @@
+{
+  "queries": [
+    {
+      "id": 1,
+      "text": "How many stars does React have?",
+      "complexity": "simple",
+      "sources": ["github"],
+      "projects": ["react"]
+    },
+    {
+      "id": 2,
+      "text": "What's the weekly npm download count for express?",
+      "complexity": "simple",
+      "sources": ["npm"],
+      "projects": ["express"]
+    },
+    {
+      "id": 3,
+      "text": "Are there any critical vulnerabilities in lodash?",
+      "complexity": "simple",
+      "sources": ["osv"],
+      "projects": ["lodash"]
+    },
+    {
+      "id": 4,
+      "text": "How many open issues does Vue have?",
+      "complexity": "simple",
+      "sources": ["github"],
+      "projects": ["vue"]
+    },
+    {
+      "id": 5,
+      "text": "What's the latest version of Next.js on npm?",
+      "complexity": "simple",
+      "sources": ["npm"],
+      "projects": ["next.js"]
+    },
+    {
+      "id": 6,
+      "text": "How many StackOverflow questions are tagged 'svelte'?",
+      "complexity": "simple",
+      "sources": ["stackoverflow"],
+      "projects": ["svelte"]
+    },
+    {
+      "id": 7,
+      "text": "When was the last commit to fastify?",
+      "complexity": "simple",
+      "sources": ["github"],
+      "projects": ["fastify"]
+    },
+    {
+      "id": 8,
+      "text": "How many contributors does Django have?",
+      "complexity": "simple",
+      "sources": ["github"],
+      "projects": ["django"]
+    },
+    {
+      "id": 9,
+      "text": "What's the bundle size of axios?",
+      "complexity": "simple",
+      "sources": ["npm"],
+      "projects": ["axios"]
+    },
+    {
+      "id": 10,
+      "text": "Is TensorFlow.js actively maintained?",
+      "complexity": "simple",
+      "sources": ["github"],
+      "projects": ["tensorflow.js"]
+    },
+    {
+      "id": 11,
+      "text": "Give me a full health report on Express.js",
+      "complexity": "medium",
+      "sources": ["github", "npm", "osv", "stackoverflow"],
+      "projects": ["express"]
+    },
+    {
+      "id": 12,
+      "text": "Is Deno a safer alternative to Node.js? Compare vulnerabilities and community",
+      "complexity": "medium",
+      "sources": ["github", "osv", "stackoverflow"],
+      "projects": ["deno", "node.js"]
+    },
+    {
+      "id": 13,
+      "text": "How healthy is the Vue ecosystem — downloads, issues, security?",
+      "complexity": "medium",
+      "sources": ["github", "npm", "osv"],
+      "projects": ["vue"]
+    },
+    {
+      "id": 14,
+      "text": "Should I adopt Bun? Check GitHub activity, npm adoption, and known issues",
+      "complexity": "medium",
+      "sources": ["github", "npm", "osv"],
+      "projects": ["bun"]
+    },
+    {
+      "id": 15,
+      "text": "Compare Fastify's maintainer activity vs community engagement",
+      "complexity": "medium",
+      "sources": ["github", "stackoverflow"],
+      "projects": ["fastify"]
+    },
+    {
+      "id": 16,
+      "text": "Is Remix gaining traction? Check GitHub, npm, and StackOverflow trends",
+      "complexity": "medium",
+      "sources": ["github", "npm", "stackoverflow"],
+      "projects": ["remix"]
+    },
+    {
+      "id": 17,
+      "text": "Give me a risk assessment for using Prisma in production",
+      "complexity": "medium",
+      "sources": ["github", "npm", "osv"],
+      "projects": ["prisma"]
+    },
+    {
+      "id": 18,
+      "text": "How's Angular doing — downloads, vulnerabilities, and community support?",
+      "complexity": "medium",
+      "sources": ["npm", "osv", "stackoverflow"],
+      "projects": ["angular"]
+    },
+    {
+      "id": 19,
+      "text": "Is Flask still relevant? Check all health indicators",
+      "complexity": "medium",
+      "sources": ["github", "osv", "stackoverflow"],
+      "projects": ["flask"]
+    },
+    {
+      "id": 20,
+      "text": "Evaluate Tailwind CSS — security, adoption, and development velocity",
+      "complexity": "medium",
+      "sources": ["github", "npm", "osv"],
+      "projects": ["tailwindcss"]
+    },
+    {
+      "id": 21,
+      "text": "Compare React vs Vue vs Svelte across all health metrics",
+      "complexity": "complex",
+      "sources": ["github", "npm", "osv", "stackoverflow"],
+      "projects": ["react", "vue", "svelte"]
+    },
+    {
+      "id": 22,
+      "text": "Rank the top 5 Node.js web frameworks by overall project health",
+      "complexity": "complex",
+      "sources": ["github", "npm", "osv", "stackoverflow"],
+      "projects": ["express", "fastify", "koa", "nest.js", "hapi"]
+    },
+    {
+      "id": 23,
+      "text": "Which Python web framework has the best security posture — Django, Flask, or FastAPI?",
+      "complexity": "complex",
+      "sources": ["github", "osv"],
+      "projects": ["django", "flask", "fastapi"]
+    },
+    {
+      "id": 24,
+      "text": "Compare the ecosystem health of Vite vs Webpack vs Turbopack",
+      "complexity": "complex",
+      "sources": ["github", "npm", "osv", "stackoverflow"],
+      "projects": ["vite", "webpack", "turbopack"]
+    },
+    {
+      "id": 25,
+      "text": "Is the JavaScript ORM space healthy? Compare Prisma, Drizzle, TypeORM, and Sequelize",
+      "complexity": "complex",
+      "sources": ["github", "npm", "osv"],
+      "projects": ["prisma", "drizzle", "typeorm", "sequelize"]
+    },
+    {
+      "id": 26,
+      "text": "Rank React state management libs by community health: Redux, Zustand, Jotai, Recoil",
+      "complexity": "complex",
+      "sources": ["github", "npm", "stackoverflow"],
+      "projects": ["redux", "zustand", "jotai", "recoil"]
+    },
+    {
+      "id": 27,
+      "text": "Cross-reference GitHub activity with npm downloads for the top 5 CSS frameworks",
+      "complexity": "complex",
+      "sources": ["github", "npm"],
+      "projects": ["tailwindcss", "bootstrap"]
+    },
+    {
+      "id": 28,
+      "text": "Which testing framework is healthiest — Jest, Vitest, or Playwright?",
+      "complexity": "complex",
+      "sources": ["github", "npm", "osv", "stackoverflow"],
+      "projects": ["jest", "vitest", "playwright"]
+    },
+    {
+      "id": 29,
+      "text": "Full ecosystem comparison: Next.js vs Nuxt vs SvelteKit",
+      "complexity": "complex",
+      "sources": ["github", "npm", "osv", "stackoverflow"],
+      "projects": ["next.js", "nuxt", "sveltekit"]
+    },
+    {
+      "id": 30,
+      "text": "Build a health dashboard for the top 10 most downloaded npm packages",
+      "complexity": "complex",
+      "sources": ["github", "npm", "osv"],
+      "projects": ["react", "vue", "express", "axios", "lodash", "next.js", "typescript", "webpack", "tailwindcss", "redux"]
+    }
+  ]
+}

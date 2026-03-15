@@ -1,0 +1,26 @@
+{
+  "name": "OSV Security Agent",
+  "description": "Specialist agent for analyzing known security vulnerabilities using the OSV.dev database.",
+  "url": "http://localhost:8003",
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": false
+  },
+  "skills": [
+    {
+      "id": "vulnerability-analysis",
+      "name": "Vulnerability Analysis",
+      "description": "Checks and analyzes known vulnerabilities for packages",
+      "tags": ["security", "vulnerabilities", "CVE", "OSV", "risk"],
+      "examples": [
+        "Are there any critical vulnerabilities in lodash?",
+        "Compare security posture of Django vs Flask",
+        "Show me security vulnerabilities in the top 5 Python web frameworks"
+      ]
+    }
+  ],
+  "defaultInputModes": ["text"],
+  "defaultOutputModes": ["text"]
+}

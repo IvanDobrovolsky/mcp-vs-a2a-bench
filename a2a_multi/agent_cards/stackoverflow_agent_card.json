@@ -1,0 +1,26 @@
+{
+  "name": "StackOverflow Community Agent",
+  "description": "Specialist agent for analyzing StackOverflow community metrics including question volume, answer rates, and tag activity.",
+  "url": "http://localhost:8004",
+  "version": "1.0.0",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "stateTransitionHistory": false
+  },
+  "skills": [
+    {
+      "id": "community-analysis",
+      "name": "Community Analysis",
+      "description": "Analyzes StackOverflow community engagement and activity",
+      "tags": ["stackoverflow", "community", "questions", "answers", "engagement"],
+      "examples": [
+        "How many StackOverflow questions are tagged 'svelte'?",
+        "Compare community engagement for React vs Vue",
+        "Is Flask still relevant on StackOverflow?"
+      ]
+    }
+  ],
+  "defaultInputModes": ["text"],
+  "defaultOutputModes": ["text"]
+}
