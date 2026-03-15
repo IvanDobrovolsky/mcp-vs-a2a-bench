@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from pathlib import Path
 
 import plotly.graph_objects as go
@@ -17,6 +18,49 @@ st.set_page_config(
     page_icon="🔬",
     layout="wide",
 )
+
+# ── Sidebar: API Keys ──
+
+with st.sidebar:
+    st.header("API Keys")
+    st.caption("Keys are only used for this session and never stored.")
+
+    anthropic_key = st.text_input(
+        "Anthropic API Key",
+        value=os.getenv("ANTHROPIC_API_KEY", ""),
+        type="password",
+        help="Required. Get one at console.anthropic.com",
+    )
+    github_token = st.text_input(
+        "GitHub Token (optional)",
+        value=os.getenv("GITHUB_TOKEN", ""),
+        type="password",
+        help="Raises rate limit from 60 to 5,000 req/hr. Get one at github.com/settings/tokens",
+    )
+
+    # Apply keys to environment for this session
+    if anthropic_key:
+        os.environ["ANTHROPIC_API_KEY"] = anthropic_key
+    if github_token:
+        os.environ["GITHUB_TOKEN"] = github_token
+
+    has_key = bool(anthropic_key)
+    if has_key:
+        st.success("Anthropic key set")
+    else:
+        st.warning("Enter your Anthropic API key to run queries")
+
+    if github_token:
+        st.success("GitHub token set")
+
+    st.divider()
+    st.markdown("""
+**[GitHub Repo](https://github.com/IvanDobrovolsky/mcp-vs-a2a-bench)**
+
+MIT License
+    """)
+
+# ── Imports (after env is set) ──
 
 from shared.models import Architecture, BenchmarkResult, QueryComplexity
 from hybrid.router import classify_query
@@ -81,17 +125,17 @@ def make_metrics_comparison(results):
 
 
 EXAMPLE_QUERIES = {
-    "Simple": [
+    "Simple (MCP wins)": [
         "How many stars does React have?",
         "What's the weekly npm download count for express?",
         "Are there any critical vulnerabilities in lodash?",
     ],
-    "Medium": [
+    "Medium (close race)": [
         "Give me a full health report on Express.js",
         "Is Deno a safer alternative to Node.js?",
         "Is Flask still relevant? Check all health indicators",
     ],
-    "Complex": [
+    "Complex (A2A wins)": [
         "Compare React vs Vue vs Svelte across all health metrics",
         "Rank the top 5 Node.js web frameworks by overall project health",
         "Full ecosystem comparison: Next.js vs Nuxt vs SvelteKit",
@@ -112,76 +156,87 @@ tab_query, tab_benchmark, tab_results, tab_complexity = st.tabs([
 # TAB: Query
 # ═══════════════════════════════════════════════════════
 with tab_query:
-    col1, col2 = st.columns([1, 3])
+    if not has_key:
+        st.info("Enter your Anthropic API key in the sidebar to run queries. "
+                "The Code Complexity and Previous Results tabs work without a key.")
+    else:
+        col1, col2 = st.columns([1, 3])
 
-    with col1:
-        arch_options = ["MCP", "A2A", "Hybrid", "All (Compare)"]
-        selected_arch = st.radio("Architecture", arch_options, horizontal=False)
+        with col1:
+            arch_options = ["MCP", "A2A", "Hybrid", "All (Compare)"]
+            selected_arch = st.radio("Architecture", arch_options, horizontal=False)
 
-    with col2:
-        query = st.text_input(
-            "Query",
-            placeholder="e.g., Compare React vs Vue vs Svelte — which project is healthiest?",
-        )
+            st.markdown("---")
+            st.caption(
+                "**MCP** — single agent, 4 tool servers\n\n"
+                "**A2A** — coordinator + 4 HTTP agent servers\n\n"
+                "**Hybrid** — routes simple→MCP, complex→A2A"
+            )
 
-        with st.expander("Example queries"):
-            for category, queries in EXAMPLE_QUERIES.items():
-                st.markdown(f"**{category}:**")
-                for q in queries:
-                    if st.button(q, key=q, use_container_width=True):
-                        st.session_state["_query"] = q
-                        st.rerun()
+        with col2:
+            query = st.text_input(
+                "Query",
+                placeholder="e.g., Compare React vs Vue vs Svelte — which project is healthiest?",
+            )
 
-        if "_query" in st.session_state:
-            query = st.session_state.pop("_query")
+            with st.expander("Example queries"):
+                for category, queries in EXAMPLE_QUERIES.items():
+                    st.markdown(f"**{category}:**")
+                    for q in queries:
+                        if st.button(q, key=q, use_container_width=True):
+                            st.session_state["_query"] = q
+                            st.rerun()
 
-        run_query_btn = st.button("Run Query", type="primary", use_container_width=True)
+            if "_query" in st.session_state:
+                query = st.session_state.pop("_query")
 
-    if run_query_btn and query:
-        detected = classify_query(query)
-        st.info(f"Detected complexity: **{detected.value}**")
+            run_query_btn = st.button("Run Query", type="primary", use_container_width=True)
 
-        if selected_arch == "All (Compare)":
-            architectures = ["MCP", "A2A", "Hybrid"]
-        else:
-            architectures = [selected_arch]
+        if run_query_btn and query:
+            detected = classify_query(query)
+            st.info(f"Detected complexity: **{detected.value}**")
 
-        results_this_run = []
+            if selected_arch == "All (Compare)":
+                architectures = ["MCP", "A2A", "Hybrid"]
+            else:
+                architectures = [selected_arch]
 
-        for arch in architectures:
-            with st.status(f"Running {arch}...", expanded=True) as status:
-                st.write("Parsing query intent...")
-                st.write("Connecting to data sources...")
-                try:
-                    result = run_async(execute_query(query, arch))
-                    results_this_run.append(result)
-                    st.session_state.results.append(result)
-                    status.update(label=f"{arch}: {result.latency_ms:.0f}ms | ${result.cost_usd:.4f}", state="complete")
-                except Exception as e:
-                    st.error(f"{arch} failed: {e}")
-                    status.update(label=f"{arch}: Failed", state="error")
+            results_this_run = []
 
-        if results_this_run:
-            st.subheader("Results")
+            for arch in architectures:
+                with st.status(f"Running {arch}...", expanded=True) as status:
+                    st.write("Parsing query intent...")
+                    st.write("Connecting to data sources...")
+                    try:
+                        result = run_async(execute_query(query, arch))
+                        results_this_run.append(result)
+                        st.session_state.results.append(result)
+                        status.update(label=f"{arch}: {result.latency_ms:.0f}ms | ${result.cost_usd:.4f}", state="complete")
+                    except Exception as e:
+                        st.error(f"{arch} failed: {e}")
+                        status.update(label=f"{arch}: Failed", state="error")
 
-            tabs = st.tabs([r.architecture.value.upper() for r in results_this_run])
-            for tab, result in zip(tabs, results_this_run):
-                with tab:
-                    st.markdown(result.response_text)
-                    mcol1, mcol2, mcol3, mcol4, mcol5 = st.columns(5)
-                    mcol1.metric("Latency", f"{result.latency_ms / 1000:.1f}s")
-                    mcol2.metric("Tokens", f"{result.total_tokens:,}")
-                    mcol3.metric("LLM Calls", result.llm_calls)
-                    mcol4.metric("API Calls", result.api_calls)
-                    mcol5.metric("Cost", f"${result.cost_usd:.4f}")
+            if results_this_run:
+                st.subheader("Results")
 
-            if len(results_this_run) > 1:
-                st.subheader("Metrics Comparison")
-                fig = make_metrics_comparison(results_this_run)
-                st.plotly_chart(fig, use_container_width=True)
+                result_tabs = st.tabs([r.architecture.value.upper() for r in results_this_run])
+                for rtab, result in zip(result_tabs, results_this_run):
+                    with rtab:
+                        st.markdown(result.response_text)
+                        mcol1, mcol2, mcol3, mcol4, mcol5 = st.columns(5)
+                        mcol1.metric("Latency", f"{result.latency_ms / 1000:.1f}s")
+                        mcol2.metric("Tokens", f"{result.total_tokens:,}")
+                        mcol3.metric("LLM Calls", result.llm_calls)
+                        mcol4.metric("API Calls", result.api_calls)
+                        mcol5.metric("Cost", f"${result.cost_usd:.4f}")
 
-    elif run_query_btn and not query:
-        st.warning("Please enter a query.")
+                if len(results_this_run) > 1:
+                    st.subheader("Metrics Comparison")
+                    fig = make_metrics_comparison(results_this_run)
+                    st.plotly_chart(fig, use_container_width=True)
+
+        elif run_query_btn and not query:
+            st.warning("Please enter a query.")
 
 # ═══════════════════════════════════════════════════════
 # TAB: Benchmark Suite
@@ -190,51 +245,55 @@ with tab_benchmark:
     st.subheader("Benchmark Suite")
     st.markdown("Run 30 queries x 3 architectures x N runs. Includes fault injection and hallucination detection.")
 
-    bcol1, bcol2 = st.columns(2)
-    num_runs = bcol1.number_input("Runs per query", min_value=1, max_value=30, value=1)
-    run_faults = bcol2.checkbox("Include fault injection tests", value=True)
+    if not has_key:
+        st.info("Enter your Anthropic API key in the sidebar to run benchmarks.")
+    else:
+        bcol1, bcol2 = st.columns(2)
+        num_runs = bcol1.number_input("Runs per query", min_value=1, max_value=30, value=1)
+        run_faults = bcol2.checkbox("Include fault injection tests", value=True)
 
-    if st.button("Start Benchmark", type="primary"):
-        st.warning(f"This will make ~{30 * 3 * num_runs} LLM API calls. Estimated cost: ~${30 * 3 * num_runs * 0.01:.2f}")
+        est_cost = 30 * 3 * num_runs * 0.03
+        st.caption(f"Estimated: ~{30 * 3 * num_runs} LLM calls | ~${est_cost:.0f} cost | ~{num_runs * 30} minutes")
 
-        with st.spinner("Running benchmark..."):
-            from benchmark.run_benchmark import run_benchmark
-            results = run_async(run_benchmark(runs=num_runs))
-            st.success(f"Benchmark complete! {len(results)} results collected.")
+        if st.button("Start Benchmark", type="primary"):
+            with st.spinner("Running benchmark..."):
+                from benchmark.run_benchmark import run_benchmark
+                results = run_async(run_benchmark(runs=num_runs))
+                st.success(f"Benchmark complete! {len(results)} results collected.")
 
-        import pandas as pd
-        from benchmark.analyze_results import generate_latency_chart, generate_token_chart, generate_cost_chart
+            import pandas as pd
+            from benchmark.analyze_results import generate_latency_chart, generate_token_chart, generate_cost_chart
 
-        df = pd.DataFrame([r.model_dump() for r in results])
+            df = pd.DataFrame([r.model_dump() for r in results])
 
-        col1, col2 = st.columns(2)
-        with col1:
-            fig1 = generate_latency_chart(df)
-            st.plotly_chart(fig1, use_container_width=True)
-        with col2:
-            fig2 = generate_token_chart(df)
-            st.plotly_chart(fig2, use_container_width=True)
+            col1, col2 = st.columns(2)
+            with col1:
+                fig1 = generate_latency_chart(df)
+                st.plotly_chart(fig1, use_container_width=True)
+            with col2:
+                fig2 = generate_token_chart(df)
+                st.plotly_chart(fig2, use_container_width=True)
 
-        fig3 = generate_cost_chart(df)
-        if fig3:
-            st.plotly_chart(fig3, use_container_width=True)
+            fig3 = generate_cost_chart(df)
+            if fig3:
+                st.plotly_chart(fig3, use_container_width=True)
 
-        if run_faults:
-            with st.spinner("Running fault injection tests..."):
-                from benchmark.fault_injection import run_fault_suite
-                fault_results = run_async(run_fault_suite())
+            if run_faults:
+                with st.spinner("Running fault injection tests..."):
+                    from benchmark.fault_injection import run_fault_suite
+                    fault_results = run_async(run_fault_suite())
 
-            st.subheader("Fault Injection Results")
-            for arch in ["mcp", "a2a", "hybrid"]:
-                arch_results = [r for r in fault_results if r.architecture.value == arch]
-                if not arch_results:
-                    continue
-                total = len(arch_results)
-                recovered = sum(1 for r in arch_results if r.produced_response)
-                st.metric(
-                    f"{arch.upper()} Recovery Rate",
-                    f"{recovered}/{total} ({recovered/total*100:.0f}%)",
-                )
+                st.subheader("Fault Injection Results")
+                for arch in ["mcp", "a2a", "hybrid"]:
+                    arch_results = [r for r in fault_results if r.architecture.value == arch]
+                    if not arch_results:
+                        continue
+                    total = len(arch_results)
+                    recovered = sum(1 for r in arch_results if r.produced_response)
+                    st.metric(
+                        f"{arch.upper()} Recovery Rate",
+                        f"{recovered}/{total} ({recovered/total*100:.0f}%)",
+                    )
 
 # ═══════════════════════════════════════════════════════
 # TAB: Previous Results
@@ -308,11 +367,11 @@ with tab_complexity:
 
     from benchmark.loc_counter import measure_all
 
-    results = measure_all()
+    complexity_results = measure_all()
 
     # Summary metrics
     col1, col2, col3 = st.columns(3)
-    for col, (arch, m) in zip([col1, col2, col3], results.items()):
+    for col, (arch, m) in zip([col1, col2, col3], complexity_results.items()):
         with col:
             st.markdown(f"### {arch.upper()}")
             st.metric("Total LOC", m.total_loc)
@@ -325,14 +384,14 @@ with tab_complexity:
     fig = go.Figure(data=[
         go.Bar(
             name="Architecture-specific",
-            x=[a.upper() for a in results],
-            y=[m.specific_loc for m in results.values()],
+            x=[a.upper() for a in complexity_results],
+            y=[m.specific_loc for m in complexity_results.values()],
             marker_color="#FF6B6B",
         ),
         go.Bar(
             name="Shared",
-            x=[a.upper() for a in results],
-            y=[m.shared_loc for m in results.values()],
+            x=[a.upper() for a in complexity_results],
+            y=[m.shared_loc for m in complexity_results.values()],
             marker_color="#96CEB4",
         ),
     ])
@@ -347,7 +406,7 @@ with tab_complexity:
     # File breakdown
     with st.expander("Per-file breakdown"):
         import pandas as pd
-        for arch, m in results.items():
+        for arch, m in complexity_results.items():
             st.markdown(f"**{arch.upper()}**")
             file_data = [{
                 "File": fm.path,
@@ -362,5 +421,5 @@ with tab_complexity:
 st.divider()
 st.caption(
     "mcp-vs-a2a-bench — The first empirical benchmark comparing MCP and A2A agent communication protocols. "
-    "MIT License."
+    "MIT License. [GitHub](https://github.com/IvanDobrovolsky/mcp-vs-a2a-bench)"
 )
