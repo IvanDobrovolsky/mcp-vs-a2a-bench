@@ -1,0 +1,88 @@
+version: "3.8"
+
+services:
+  # A2A specialist agents (Architecture B)
+  github-agent:
+    build: .
+    command: python -m a2a_multi.github_agent
+    ports:
+      - "8001:8001"
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8001/.well-known/agent.json').raise_for_status()"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  npm-agent:
+    build: .
+    command: python -m a2a_multi.npm_agent
+    ports:
+      - "8002:8002"
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8002/.well-known/agent.json').raise_for_status()"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  osv-agent:
+    build: .
+    command: python -m a2a_multi.osv_agent
+    ports:
+      - "8003:8003"
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8003/.well-known/agent.json').raise_for_status()"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  stackoverflow-agent:
+    build: .
+    command: python -m a2a_multi.stackoverflow_agent
+    ports:
+      - "8004:8004"
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8004/.well-known/agent.json').raise_for_status()"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Streamlit UI
+  ui:
+    build: .
+    command: streamlit run app.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
+    env_file: .env
+    depends_on:
+      github-agent:
+        condition: service_healthy
+      npm-agent:
+        condition: service_healthy
+      osv-agent:
+        condition: service_healthy
+      stackoverflow-agent:
+        condition: service_healthy
+
+  # Benchmark runner (one-shot)
+  benchmark:
+    build: .
+    command: python -m benchmark.run_benchmark --full --runs 5
+    env_file: .env
+    volumes:
+      - ./benchmark/results:/app/benchmark/results
+      - ./paper/figures:/app/paper/figures
+    depends_on:
+      github-agent:
+        condition: service_healthy
+      npm-agent:
+        condition: service_healthy
+      osv-agent:
+        condition: service_healthy
+      stackoverflow-agent:
+        condition: service_healthy
+    profiles:
+      - benchmark
