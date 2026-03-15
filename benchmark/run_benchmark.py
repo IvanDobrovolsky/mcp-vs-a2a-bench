@@ -105,7 +105,7 @@ async def run_benchmark(
     return results
 
 
-def _save_results(results: list[BenchmarkResult], output_file: str | None = None):
+def _save_results(results: list[BenchmarkResult], output_file=None):
     """Save results to JSON file."""
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     filepath = RESULTS_DIR / (output_file or "benchmark_results.json")
@@ -126,6 +126,14 @@ async def main():
                         help=f"Runs per query (default: {RUNS_PER_QUERY})")
     parser.add_argument("--output", type=str, default=None,
                         help="Output filename (default: benchmark_results.json)")
+    parser.add_argument("--fault-injection", action="store_true",
+                        help="Also run fault injection tests after benchmark")
+    parser.add_argument("--hallucination-check", action="store_true",
+                        help="Run hallucination detection on results after benchmark")
+    parser.add_argument("--loc", action="store_true",
+                        help="Print code complexity metrics")
+    parser.add_argument("--full", action="store_true",
+                        help="Run everything: benchmark + fault injection + hallucination check + LOC")
 
     args = parser.parse_args()
 
@@ -133,12 +141,40 @@ async def main():
     if args.arch:
         architectures = [Architecture(a) for a in args.arch]
 
+    run_full = args.full
+
+    # Main benchmark
     await run_benchmark(
         architectures=architectures,
         query_ids=args.queries,
         runs=args.runs,
         output_file=args.output,
     )
+
+    # Fault injection
+    if args.fault_injection or run_full:
+        print("\n" + "=" * 80)
+        print("FAULT INJECTION TESTS")
+        print("=" * 80 + "\n")
+        from benchmark.fault_injection import run_fault_suite
+        await run_fault_suite(architectures=architectures)
+
+    # Hallucination check
+    if args.hallucination_check or run_full:
+        print("\n" + "=" * 80)
+        print("HALLUCINATION DETECTION")
+        print("=" * 80 + "\n")
+        from benchmark.hallucination_detector import check_benchmark_results
+        input_file = args.output or "benchmark_results.json"
+        await check_benchmark_results(input_file)
+
+    # LOC metrics
+    if args.loc or run_full:
+        print("\n")
+        from benchmark.loc_counter import measure_all, print_report, save_report
+        results = measure_all()
+        print_report(results)
+        save_report(results)
 
 
 if __name__ == "__main__":
