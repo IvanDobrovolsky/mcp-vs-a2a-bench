@@ -131,6 +131,7 @@ class BenchmarkResult(BaseModel):
     api_calls: int = 0
     error_recovery: bool = False
     cold_start_ms: float = 0.0
+    cost_usd: float = 0.0
     success: bool = True
     error_message: str = ""
     response_text: str = ""
@@ -148,6 +149,7 @@ class BenchmarkSummary(BaseModel):
     avg_tokens: float = 0.0
     avg_llm_calls: float = 0.0
     avg_api_calls: float = 0.0
+    avg_cost_usd: float = 0.0
     success_rate: float = 0.0
     error_recovery_rate: float = 0.0
     total_runs: int = 0

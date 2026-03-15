@@ -205,6 +205,7 @@ async def run_query(
             metrics.completion_tokens += sub_metrics.get("completion_tokens", 0)
             metrics.llm_calls += sub_metrics.get("llm_calls", 0)
             metrics.api_calls += sub_metrics.get("api_calls", 0)
+            metrics.cost_usd += sub_metrics.get("cost_usd", 0)
 
     # Step 4: Synthesize
     response_text = await _synthesize(llm_client, query, valid_results, metrics)
@@ -225,6 +226,7 @@ async def run_query(
         api_calls=metrics.api_calls,
         error_recovery=len(metrics.errors) > 0 and response_text != "",
         cold_start_ms=metrics.cold_start_ms,
+        cost_usd=metrics.cost_usd,
         success=response_text != "",
         error_message="; ".join(metrics.errors) if metrics.errors else "",
         response_text=response_text,
@@ -246,7 +248,8 @@ async def main():
     print(f"Response:\n{result.response_text}\n")
     print(f"Agents: {result.metadata.get('agents_discovered', [])}")
     print(f"Latency: {result.latency_ms:.0f}ms | Tokens: {result.total_tokens} | "
-          f"LLM calls: {result.llm_calls} | API calls: {result.api_calls}")
+          f"LLM calls: {result.llm_calls} | API calls: {result.api_calls} | "
+          f"Cost: ${result.cost_usd:.4f}")
 
 
 if __name__ == "__main__":

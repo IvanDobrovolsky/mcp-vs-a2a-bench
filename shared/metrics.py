@@ -1,4 +1,4 @@
-"""Token counting and latency tracking utilities."""
+"""Token counting, latency tracking, and cost estimation utilities."""
 
 from __future__ import annotations
 
@@ -6,6 +6,30 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Generator
+
+
+# Claude Sonnet pricing (per million tokens) — update if model changes
+# Source: Anthropic pricing page
+PRICING = {
+    "claude-sonnet-4-20250514": {
+        "input_per_million": 3.00,   # $3.00 per 1M input tokens
+        "output_per_million": 15.00,  # $15.00 per 1M output tokens
+    },
+}
+
+DEFAULT_MODEL = "claude-sonnet-4-20250514"
+
+
+def compute_cost(
+    prompt_tokens: int,
+    completion_tokens: int,
+    model: str = DEFAULT_MODEL,
+) -> float:
+    """Compute cost in USD for a given token usage."""
+    pricing = PRICING.get(model, PRICING[DEFAULT_MODEL])
+    input_cost = (prompt_tokens / 1_000_000) * pricing["input_per_million"]
+    output_cost = (completion_tokens / 1_000_000) * pricing["output_per_million"]
+    return input_cost + output_cost
 
 
 @dataclass
@@ -19,6 +43,7 @@ class MetricsCollector:
     api_calls: int = 0
     latency_ms: float = 0.0
     cold_start_ms: float = 0.0
+    cost_usd: float = 0.0
     errors: list[str] = field(default_factory=list)
     _start_time: float | None = None
     _first_output_time: float | None = None
@@ -40,6 +65,7 @@ class MetricsCollector:
         self.prompt_tokens += prompt_tokens
         self.completion_tokens += completion_tokens
         self.total_tokens += prompt_tokens + completion_tokens
+        self.cost_usd += compute_cost(prompt_tokens, completion_tokens)
 
     def record_api_call(self) -> None:
         self.api_calls += 1

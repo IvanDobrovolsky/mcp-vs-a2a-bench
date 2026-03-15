@@ -183,6 +183,7 @@ def compute_summaries(df: pd.DataFrame) -> list[BenchmarkSummary]:
                 avg_tokens=float(successful["total_tokens"].mean()) if not successful.empty else 0,
                 avg_llm_calls=float(successful["llm_calls"].mean()) if not successful.empty else 0,
                 avg_api_calls=float(successful["api_calls"].mean()) if not successful.empty else 0,
+                avg_cost_usd=float(successful["cost_usd"].mean()) if (not successful.empty and "cost_usd" in successful.columns) else 0.0,
                 success_rate=float(successful.shape[0] / subset.shape[0] * 100) if not subset.empty else 0,
                 error_recovery_rate=float(
                     subset[subset["error_recovery"] == True].shape[0] / subset.shape[0] * 100

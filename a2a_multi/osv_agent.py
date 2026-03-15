@@ -155,6 +155,7 @@ Provide a factual security analysis."""
                 "completion_tokens": metrics.completion_tokens,
                 "llm_calls": metrics.llm_calls,
                 "api_calls": metrics.api_calls,
+                "cost_usd": metrics.cost_usd,
             },
         }
 
