@@ -25,38 +25,14 @@ from shared.github_client import get_repo_info
 from shared.npm_client import get_full_package_info
 from shared.osv_client import query_vulnerabilities
 from shared.stackoverflow_client import get_tag_info
+from shared.project_maps import (
+    GITHUB_REPO_MAP as REPO_MAP,
+    NPM_PACKAGE_MAP as NPM_MAP,
+    OSV_PACKAGE_MAP as OSV_MAP,
+    SO_TAG_MAP as SO_MAP,
+)
 
 RESULTS_DIR = Path(__file__).parent / "results"
-
-# Project-to-API-args mapping (reuse from MCP server)
-from mcp_only.github_mcp_server import REPO_MAP
-
-NPM_MAP: dict[str, str] = {
-    "react": "react", "vue": "vue", "svelte": "svelte",
-    "angular": "@angular/core", "next.js": "next", "express": "express",
-    "fastify": "fastify", "koa": "koa", "vite": "vite", "webpack": "webpack",
-    "prisma": "@prisma/client", "drizzle": "drizzle-orm", "typeorm": "typeorm",
-    "sequelize": "sequelize", "redux": "redux", "zustand": "zustand",
-    "jotai": "jotai", "recoil": "recoil", "tailwindcss": "tailwindcss",
-    "jest": "jest", "vitest": "vitest", "playwright": "playwright",
-    "lodash": "lodash", "axios": "axios", "django": "django", "flask": "flask",
-    "fastapi": "fastapi", "remix": "@remix-run/react", "bootstrap": "bootstrap",
-}
-
-SO_MAP: dict[str, str] = {
-    "react": "reactjs", "vue": "vue.js", "svelte": "svelte",
-    "angular": "angular", "express": "express", "fastify": "fastify",
-    "django": "django", "flask": "flask", "fastapi": "fastapi",
-    "redux": "redux", "jest": "jestjs", "vitest": "vitest",
-    "playwright": "playwright", "lodash": "lodash", "axios": "axios",
-}
-
-OSV_MAP: dict[str, tuple[str, str]] = {
-    "react": ("react", "npm"), "vue": ("vue", "npm"), "express": ("express", "npm"),
-    "lodash": ("lodash", "npm"), "axios": ("axios", "npm"),
-    "django": ("django", "PyPI"), "flask": ("flask", "PyPI"),
-    "fastapi": ("fastapi", "PyPI"),
-}
 
 
 @dataclass

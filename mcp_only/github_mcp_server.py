@@ -7,54 +7,12 @@ import json
 from mcp.server.fastmcp import FastMCP
 
 from shared.github_client import get_last_commit_date, get_repo_info
+from shared.project_maps import GITHUB_REPO_MAP
 
 mcp = FastMCP("GitHub MCP Server")
 
-# Mapping of common project names to GitHub owner/repo
-REPO_MAP: dict[str, tuple[str, str]] = {
-    "react": ("facebook", "react"),
-    "vue": ("vuejs", "core"),
-    "svelte": ("sveltejs", "svelte"),
-    "angular": ("angular", "angular"),
-    "next.js": ("vercel", "next.js"),
-    "nextjs": ("vercel", "next.js"),
-    "nuxt": ("nuxt", "nuxt"),
-    "sveltekit": ("sveltejs", "kit"),
-    "express": ("expressjs", "express"),
-    "express.js": ("expressjs", "express"),
-    "fastify": ("fastify", "fastify"),
-    "koa": ("koajs", "koa"),
-    "django": ("django", "django"),
-    "flask": ("pallets", "flask"),
-    "fastapi": ("fastapi", "fastapi"),
-    "deno": ("denoland", "deno"),
-    "bun": ("oven-sh", "bun"),
-    "node.js": ("nodejs", "node"),
-    "nodejs": ("nodejs", "node"),
-    "vite": ("vitejs", "vite"),
-    "webpack": ("webpack", "webpack"),
-    "turbopack": ("vercel", "turborepo"),
-    "prisma": ("prisma", "prisma"),
-    "drizzle": ("drizzle-team", "drizzle-orm"),
-    "typeorm": ("typeorm", "typeorm"),
-    "sequelize": ("sequelize", "sequelize"),
-    "redux": ("reduxjs", "redux"),
-    "zustand": ("pmndrs", "zustand"),
-    "jotai": ("pmndrs", "jotai"),
-    "recoil": ("facebookexperimental", "Recoil"),
-    "tailwind": ("tailwindlabs", "tailwindcss"),
-    "tailwind css": ("tailwindlabs", "tailwindcss"),
-    "tailwindcss": ("tailwindlabs", "tailwindcss"),
-    "bootstrap": ("twbs", "bootstrap"),
-    "jest": ("jestjs", "jest"),
-    "vitest": ("vitest-dev", "vitest"),
-    "playwright": ("microsoft", "playwright"),
-    "lodash": ("lodash", "lodash"),
-    "axios": ("axios", "axios"),
-    "tensorflow.js": ("tensorflow", "tfjs"),
-    "tensorflowjs": ("tensorflow", "tfjs"),
-    "remix": ("remix-run", "remix"),
-}
+# Re-export for backward compatibility
+REPO_MAP = GITHUB_REPO_MAP
 
 
 def _resolve_repo(project: str) -> tuple[str, str]:

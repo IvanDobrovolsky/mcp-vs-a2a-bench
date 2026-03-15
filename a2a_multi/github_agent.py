@@ -11,11 +11,10 @@ from a2a_multi.a2a_models import AgentCard, AgentCapabilities, AgentSkill
 from a2a_multi.a2a_server import A2AServer
 from shared.github_client import get_repo_info
 from shared.metrics import MetricsCollector
+from shared.project_maps import GITHUB_REPO_MAP as REPO_MAP
 
 MODEL = "claude-sonnet-4-20250514"
 PORT = 8001
-
-from mcp_only.github_mcp_server import REPO_MAP
 
 SYSTEM_PROMPT = """You are a GitHub data specialist agent. You analyze GitHub repository data to assess project health.
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Generator
+from typing import Generator, Optional
 
 
 # Claude Sonnet pricing (per million tokens) — update if model changes
@@ -45,8 +45,8 @@ class MetricsCollector:
     cold_start_ms: float = 0.0
     cost_usd: float = 0.0
     errors: list[str] = field(default_factory=list)
-    _start_time: float | None = None
-    _first_output_time: float | None = None
+    _start_time: Optional[float] = None
+    _first_output_time: Optional[float] = None
 
     def start(self) -> None:
         self._start_time = time.perf_counter()

@@ -117,7 +117,11 @@ class ArchitectureMetrics:
 
 def count_lines(filepath: Path) -> FileMetrics:
     """Count lines, functions, classes, and estimate cyclomatic complexity."""
-    metrics = FileMetrics(path=str(filepath.relative_to(PROJECT_ROOT)))
+    try:
+        rel_path = str(filepath.relative_to(PROJECT_ROOT))
+    except ValueError:
+        rel_path = str(filepath)
+    metrics = FileMetrics(path=rel_path)
 
     try:
         content = filepath.read_text()

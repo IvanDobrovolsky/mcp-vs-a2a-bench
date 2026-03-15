@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -31,7 +31,7 @@ class GitHubRepoInfo(BaseModel):
     forks: int = 0
     open_issues: int = 0
     watchers: int = 0
-    language: str | None = None
+    language: Optional[str] = None
     created_at: str = ""
     updated_at: str = ""
     pushed_at: str = ""
@@ -39,7 +39,7 @@ class GitHubRepoInfo(BaseModel):
     contributors_count: int = 0
     recent_commits_30d: int = 0
     open_prs: int = 0
-    license: str | None = None
+    license: Optional[str] = None
 
 
 # ── npm Models ──
@@ -54,7 +54,7 @@ class NpmPackageInfo(BaseModel):
     versions_count: int = 0
     last_publish: str = ""
     description: str = ""
-    license: str | None = None
+    license: Optional[str] = None
 
 
 # ── OSV Models ──
@@ -98,11 +98,11 @@ class StackOverflowInfo(BaseModel):
 class ProjectHealthReport(BaseModel):
     project_name: str
     timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
-    github: GitHubRepoInfo | None = None
-    npm: NpmPackageInfo | None = None
-    osv: OsvReport | None = None
-    stackoverflow: StackOverflowInfo | None = None
-    health_score: float | None = None
+    github: Optional[GitHubRepoInfo] = None
+    npm: Optional[NpmPackageInfo] = None
+    osv: Optional[OsvReport] = None
+    stackoverflow: Optional[StackOverflowInfo] = None
+    health_score: Optional[float] = None
     summary: str = ""
 
 

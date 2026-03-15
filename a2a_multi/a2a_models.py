@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -32,8 +32,8 @@ class TextPart(BaseModel):
 
 class DataPart(BaseModel):
     type: str = "data"
-    data: dict[str, Any] = Field(default_factory=dict)
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    data: Dict[str, Any] = Field(default_factory=dict)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 # ── Messages ──
@@ -41,7 +41,7 @@ class DataPart(BaseModel):
 
 class Message(BaseModel):
     role: str  # "user" or "agent"
-    parts: list[TextPart | DataPart] = Field(default_factory=list)
+    parts: List[Union[TextPart, DataPart]] = Field(default_factory=list)
 
 
 # ── Task ──
@@ -49,16 +49,16 @@ class Message(BaseModel):
 
 class TaskStatus(BaseModel):
     state: TaskState = TaskState.SUBMITTED
-    message: Message | None = None
+    message: Optional[Message] = None
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 class Task(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     status: TaskStatus = Field(default_factory=TaskStatus)
-    artifacts: list[dict[str, Any]] = Field(default_factory=list)
-    history: list[Message] = Field(default_factory=list)
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    artifacts: List[Dict[str, Any]] = Field(default_factory=list)
+    history: List[Message] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 # ── JSON-RPC ──
@@ -66,16 +66,16 @@ class Task(BaseModel):
 
 class JSONRPCRequest(BaseModel):
     jsonrpc: str = "2.0"
-    id: str | int = Field(default_factory=lambda: str(uuid.uuid4()))
+    id: Union[str, int] = Field(default_factory=lambda: str(uuid.uuid4()))
     method: str
-    params: dict[str, Any] = Field(default_factory=dict)
+    params: Dict[str, Any] = Field(default_factory=dict)
 
 
 class JSONRPCResponse(BaseModel):
     jsonrpc: str = "2.0"
-    id: str | int
-    result: dict[str, Any] | None = None
-    error: dict[str, Any] | None = None
+    id: Union[str, int]
+    result: Optional[Dict[str, Any]] = None
+    error: Optional[Dict[str, Any]] = None
 
 
 # ── Agent Card ──
@@ -85,8 +85,8 @@ class AgentSkill(BaseModel):
     id: str
     name: str
     description: str
-    tags: list[str] = Field(default_factory=list)
-    examples: list[str] = Field(default_factory=list)
+    tags: List[str] = Field(default_factory=list)
+    examples: List[str] = Field(default_factory=list)
 
 
 class AgentCapabilities(BaseModel):
@@ -101,6 +101,6 @@ class AgentCard(BaseModel):
     url: str
     version: str = "1.0.0"
     capabilities: AgentCapabilities = Field(default_factory=AgentCapabilities)
-    skills: list[AgentSkill] = Field(default_factory=list)
-    defaultInputModes: list[str] = Field(default_factory=lambda: ["text"])
-    defaultOutputModes: list[str] = Field(default_factory=lambda: ["text"])
+    skills: List[AgentSkill] = Field(default_factory=list)
+    defaultInputModes: List[str] = Field(default_factory=lambda: ["text"])
+    defaultOutputModes: List[str] = Field(default_factory=lambda: ["text"])

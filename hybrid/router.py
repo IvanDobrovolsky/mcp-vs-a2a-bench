@@ -34,6 +34,16 @@ MULTI_SOURCE_KEYWORDS = [
     "evaluate", "should i adopt",
 ]
 
+# Known project names for counting mentions (avoids importing from mcp_only)
+KNOWN_PROJECTS = [
+    "react", "vue", "svelte", "angular", "next.js", "nextjs", "nuxt",
+    "sveltekit", "express", "fastify", "koa", "django", "flask", "fastapi",
+    "deno", "bun", "vite", "webpack", "turbopack", "prisma", "drizzle",
+    "typeorm", "sequelize", "redux", "zustand", "jotai", "recoil",
+    "tailwind", "tailwindcss", "bootstrap", "jest", "vitest", "playwright",
+    "lodash", "axios", "tensorflow.js", "remix",
+]
+
 
 def classify_query_heuristic(query: str) -> QueryComplexity:
     """Fast heuristic classification without LLM call."""
@@ -43,8 +53,7 @@ def classify_query_heuristic(query: str) -> QueryComplexity:
     has_comparison = any(kw in query_lower for kw in COMPARISON_KEYWORDS)
 
     # Count project mentions (rough proxy)
-    from mcp_only.github_mcp_server import REPO_MAP
-    projects_mentioned = sum(1 for name in REPO_MAP if name in query_lower)
+    projects_mentioned = sum(1 for name in KNOWN_PROJECTS if name in query_lower)
 
     if has_comparison and projects_mentioned >= 3:
         return QueryComplexity.COMPLEX
