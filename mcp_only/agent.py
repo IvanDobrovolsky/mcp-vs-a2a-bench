@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import json
-import sys
 import os
+import sys
+from contextlib import AsyncExitStack
 
 import anthropic
 from mcp import ClientSession, StdioServerParameters
@@ -34,51 +35,37 @@ For npm packages, use the npm package name (e.g. 'react', 'express', 'lodash').
 For StackOverflow, use the appropriate tag (e.g. 'reactjs', 'vue.js', 'express').
 """
 
+# Use the venv python if available, otherwise sys.executable
+PYTHON = os.path.join(PROJECT_ROOT, ".venv", "bin", "python") if os.path.exists(
+    os.path.join(PROJECT_ROOT, ".venv", "bin", "python")
+) else sys.executable
+
 MCP_SERVERS = [
     StdioServerParameters(
-        command=sys.executable,
+        command=PYTHON,
         args=["-m", "mcp_only.github_mcp_server"],
         env={**os.environ},
         cwd=PROJECT_ROOT,
     ),
     StdioServerParameters(
-        command=sys.executable,
+        command=PYTHON,
         args=["-m", "mcp_only.npm_mcp_server"],
         env={**os.environ},
         cwd=PROJECT_ROOT,
     ),
     StdioServerParameters(
-        command=sys.executable,
+        command=PYTHON,
         args=["-m", "mcp_only.osv_mcp_server"],
         env={**os.environ},
         cwd=PROJECT_ROOT,
     ),
     StdioServerParameters(
-        command=sys.executable,
+        command=PYTHON,
         args=["-m", "mcp_only.stackoverflow_mcp_server"],
         env={**os.environ},
         cwd=PROJECT_ROOT,
     ),
 ]
-
-
-async def _connect_and_list_tools(
-    server_params: StdioServerParameters,
-) -> tuple[ClientSession, list[dict]]:
-    """Connect to an MCP server and list its tools."""
-    read_stream, write_stream = await stdio_client(server_params).__aenter__()
-    session = ClientSession(read_stream, write_stream)
-    await session.__aenter__()
-    await session.initialize()
-    tools_result = await session.list_tools()
-    tools = []
-    for t in tools_result.tools:
-        tools.append({
-            "name": t.name,
-            "description": t.description or "",
-            "input_schema": t.inputSchema,
-        })
-    return session, tools
 
 
 async def run_query(
@@ -91,106 +78,109 @@ async def run_query(
     metrics = MetricsCollector()
     metrics.start()
 
-    sessions: list[ClientSession] = []
-    tool_to_session: dict[str, ClientSession] = {}
-    all_tools: list[dict] = []
-    context_managers = []
+    response_text = ""
 
-    try:
-        # Connect to all MCP servers
-        for server_params in MCP_SERVERS:
-            read_stream, write_stream = await stdio_client(server_params).__aenter__()
-            session = ClientSession(read_stream, write_stream)
-            await session.__aenter__()
-            await session.initialize()
-            tools_result = await session.list_tools()
+    async with AsyncExitStack() as stack:
+        tool_to_session: dict[str, ClientSession] = {}
+        all_tools: list[dict] = []
 
-            for t in tools_result.tools:
-                tool_def = {
-                    "name": t.name,
-                    "description": t.description or "",
-                    "input_schema": t.inputSchema,
+        try:
+            # Connect to all MCP servers with proper cleanup
+            for server_params in MCP_SERVERS:
+                stdio_transport = await stack.enter_async_context(
+                    stdio_client(server_params)
+                )
+                read_stream, write_stream = stdio_transport
+                session = await stack.enter_async_context(
+                    ClientSession(read_stream, write_stream)
+                )
+                await session.initialize()
+                tools_result = await session.list_tools()
+
+                for t in tools_result.tools:
+                    tool_def = {
+                        "name": t.name,
+                        "description": t.description or "",
+                        "input_schema": t.inputSchema,
+                    }
+                    all_tools.append(tool_def)
+                    tool_to_session[t.name] = session
+
+            # Convert tools to Anthropic format
+            anthropic_tools = [
+                {
+                    "name": t["name"],
+                    "description": t["description"],
+                    "input_schema": t["input_schema"],
                 }
-                all_tools.append(tool_def)
-                tool_to_session[t.name] = session
+                for t in all_tools
+            ]
 
-            sessions.append(session)
+            # Run agentic loop
+            client = anthropic.Anthropic()
+            messages = [{"role": "user", "content": query}]
+            max_iterations = 15
 
-        # Convert tools to Anthropic format
-        anthropic_tools = [
-            {
-                "name": t["name"],
-                "description": t["description"],
-                "input_schema": t["input_schema"],
-            }
-            for t in all_tools
-        ]
+            for _ in range(max_iterations):
+                response = client.messages.create(
+                    model=MODEL,
+                    max_tokens=4096,
+                    system=SYSTEM_PROMPT,
+                    tools=anthropic_tools,
+                    messages=messages,
+                )
 
-        # Run agentic loop
-        client = anthropic.Anthropic()
-        messages = [{"role": "user", "content": query}]
+                metrics.record_llm_usage(
+                    response.usage.input_tokens, response.usage.output_tokens
+                )
+                metrics.mark_first_output()
 
-        response_text = ""
-        max_iterations = 15
+                # Process response
+                tool_calls = []
+                for block in response.content:
+                    if block.type == "text":
+                        response_text += block.text
+                    elif block.type == "tool_use":
+                        tool_calls.append(block)
 
-        for _ in range(max_iterations):
-            response = client.messages.create(
-                model=MODEL,
-                max_tokens=4096,
-                system=SYSTEM_PROMPT,
-                tools=anthropic_tools,
-                messages=messages,
-            )
+                if response.stop_reason == "end_turn" or not tool_calls:
+                    break
 
-            metrics.record_llm_usage(
-                response.usage.input_tokens, response.usage.output_tokens
-            )
-            metrics.mark_first_output()
+                # Execute tool calls
+                messages.append({"role": "assistant", "content": response.content})
+                tool_results = []
 
-            # Process response
-            tool_calls = []
-            for block in response.content:
-                if block.type == "text":
-                    response_text += block.text
-                elif block.type == "tool_use":
-                    tool_calls.append(block)
-
-            if response.stop_reason == "end_turn" or not tool_calls:
-                break
-
-            # Execute tool calls
-            messages.append({"role": "assistant", "content": response.content})
-            tool_results = []
-
-            for tool_call in tool_calls:
-                session = tool_to_session.get(tool_call.name)
-                if session:
-                    try:
-                        metrics.record_api_call()
-                        result = await session.call_tool(
-                            tool_call.name, tool_call.input
+                for tool_call in tool_calls:
+                    session = tool_to_session.get(tool_call.name)
+                    if session:
+                        try:
+                            metrics.record_api_call()
+                            result = await session.call_tool(
+                                tool_call.name, tool_call.input
+                            )
+                            tool_result_text = (
+                                result.content[0].text if result.content else ""
+                            )
+                        except Exception as e:
+                            tool_result_text = json.dumps({"error": str(e)})
+                            metrics.record_error(str(e))
+                    else:
+                        tool_result_text = json.dumps(
+                            {"error": f"Unknown tool: {tool_call.name}"}
                         )
-                        tool_result_text = (
-                            result.content[0].text if result.content else ""
-                        )
-                    except Exception as e:
-                        tool_result_text = json.dumps({"error": str(e)})
-                        metrics.record_error(str(e))
-                else:
-                    tool_result_text = json.dumps(
-                        {"error": f"Unknown tool: {tool_call.name}"}
-                    )
 
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": tool_call.id,
-                    "content": tool_result_text,
-                })
+                    tool_results.append({
+                        "type": "tool_result",
+                        "tool_use_id": tool_call.id,
+                        "content": tool_result_text,
+                    })
 
-            messages.append({"role": "user", "content": tool_results})
+                messages.append({"role": "user", "content": tool_results})
 
-    finally:
-        metrics.stop()
+        except Exception as e:
+            metrics.record_error(str(e))
+
+    metrics.stop()
 
     return BenchmarkResult(
         query_id=query_id,
