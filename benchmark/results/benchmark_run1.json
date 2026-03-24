@@ -1,0 +1,24 @@
+[
+  {
+    "query_id": 1,
+    "query_text": "How many stars does React have?",
+    "complexity": "simple",
+    "architecture": "mcp",
+    "run_number": 1,
+    "latency_ms": 0.0,
+    "total_tokens": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "llm_calls": 0,
+    "api_calls": 0,
+    "error_recovery": false,
+    "cold_start_ms": 0.0,
+    "cost_usd": 0.0,
+    "success": false,
+    "error_message": "",
+    "response_text": "",
+    "reports": [],
+    "timestamp": "2026-03-15T01:50:51.896599",
+    "metadata": {}
+  }
+]
